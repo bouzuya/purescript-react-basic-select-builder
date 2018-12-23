@@ -17,13 +17,15 @@ type Props =
 type Form =
   { item :: Item
   , items :: Items
+  , label :: String
   , name :: String
   }
 type Item = String
 type Items = Array Item
+type Label = String
 type Name = String
 
-data Select = Select Name Items
+data Select = Select Name Label Items
 
 type State =
   { built :: Maybe Select
@@ -35,6 +37,7 @@ data Action
   | AddItem
   | BuildForm
   | EditItem String
+  | EditLabel String
   | EditName String
 
 component :: Component Props
@@ -44,10 +47,10 @@ app :: JSX
 app = make component { initialState, render, update } {}
 
 buildFromForm :: Form -> Select
-buildFromForm { name, items } = Select name items
+buildFromForm { name, items, label } = Select name label items
 
 initialForm :: Form
-initialForm = { item: "", items: [], name: "" }
+initialForm = { item: "", items: [], label: "", name: "" }
 
 initialState :: State
 initialState =
@@ -80,6 +83,18 @@ render self@{ state: { built, form } } =
                     targetValue
                     (\v -> EditName (fromMaybe "" v))
               , value: form.name
+              }
+            ]
+          , H.br {}
+          , H.label_
+            [ H.span_ [ H.text "label" ]
+            , H.input
+              { onChange:
+                  capture
+                    self
+                    targetValue
+                    (\v -> EditLabel (fromMaybe "" v))
+              , value: form.label
               }
             ]
           , H.br {}
@@ -127,9 +142,9 @@ render self@{ state: { built, form } } =
         , H.div_
           [ case built of
               Nothing -> H.text "Not build"
-              Just (Select name items') ->
+              Just (Select name label items') ->
                 H.label_
-                [ H.span_ [ H.text name ]
+                [ H.span_ [ H.text label ]
                 , H.select
                   { name
                   , children:
@@ -156,5 +171,7 @@ update self@{ state } BuildForm =
   Update state { built = Just (buildFromForm state.form), form = initialForm }
 update self@{ state } (EditItem v) =
   Update state { form = state.form { item = v } }
+update self@{ state } (EditLabel v) =
+  Update state { form = state.form { label = v } }
 update self@{ state } (EditName v) =
   Update state { form = state.form { name = v } }
