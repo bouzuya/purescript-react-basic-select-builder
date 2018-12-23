@@ -15,17 +15,18 @@ type Props =
   {}
 
 type Form =
-  { item :: Item
-  , items :: Items
-  , label :: String
+  { label :: String
   , name :: String
+  , optionLabel :: String
+  , optionValue :: String
+  , options :: Array Option
   }
-type Item = String
-type Items = Array Item
+type OptionLabel = String
+type OptionValue = String
+data Option = Option OptionLabel OptionValue
 type Label = String
 type Name = String
-
-data Select = Select Name Label Items
+data Select = Select Name Label (Array Option)
 
 type State =
   { built :: Maybe Select
@@ -34,11 +35,12 @@ type State =
 
 data Action
   = Noop
-  | AddItem
+  | AddOption
   | BuildForm
-  | EditItem String
   | EditLabel String
   | EditName String
+  | EditOptionLabel String
+  | EditOptionValue String
 
 component :: Component Props
 component = createComponent "App"
@@ -47,10 +49,16 @@ app :: JSX
 app = make component { initialState, render, update } {}
 
 buildFromForm :: Form -> Select
-buildFromForm { name, items, label } = Select name label items
+buildFromForm { name, options, label } = Select name label options
 
 initialForm :: Form
-initialForm = { item: "", items: [], label: "", name: "" }
+initialForm =
+  { label: ""
+  , name: ""
+  , optionLabel: ""
+  , optionValue: ""
+  , options: []
+  }
 
 initialState :: State
 initialState =
@@ -75,7 +83,7 @@ render self@{ state: { built, form } } =
       , children:
         [ H.div_
           [ H.label_
-            [ H.span_ [ H.text "name" ]
+            [ H.span_ [ H.text "select name" ]
             , H.input
               { onChange:
                   capture
@@ -87,7 +95,7 @@ render self@{ state: { built, form } } =
             ]
           , H.br {}
           , H.label_
-            [ H.span_ [ H.text "label" ]
+            [ H.span_ [ H.text "select label" ]
             , H.input
               { onChange:
                   capture
@@ -99,14 +107,26 @@ render self@{ state: { built, form } } =
             ]
           , H.br {}
           , H.label_
-            [ H.span_ [ H.text "item" ]
+            [ H.span_ [ H.text "option label" ]
             , H.input
               { onChange:
                   capture
                     self
                     targetValue
-                    (\v -> EditItem (fromMaybe "" v))
-              , value: form.item
+                    (\v -> EditOptionLabel (fromMaybe "" v))
+              , value: form.optionLabel
+              }
+            ]
+          , H.br {}
+          , H.label_
+            [ H.span_ [ H.text "option value" ]
+            , H.input
+              { onChange:
+                  capture
+                    self
+                    targetValue
+                    (\v -> EditOptionValue (fromMaybe "" v))
+              , value: form.optionValue
               }
             ]
           , H.button
@@ -114,17 +134,23 @@ render self@{ state: { built, form } } =
                 capture
                   self
                   preventDefault
-                  (const AddItem)
+                  (const AddOption)
             , children: [ H.text "Add" ]
             }
           ]
         , H.div_
-          [ H.ul_
+          [ H.span_
+            [ H.text "options"
+            ]
+          , H.ul_
             (mapFlipped
-              form.items
-              (\i ->
+              form.options
+              (\(Option l v) ->
                 H.li_
-                [ H.text i
+                [ H.span_
+                  [ H.text l ]
+                , H.span_
+                  [ H.text v ]
                 ]
               )
             )
@@ -142,15 +168,16 @@ render self@{ state: { built, form } } =
         , H.div_
           [ case built of
               Nothing -> H.text "Not build"
-              Just (Select name label items') ->
+              Just (Select name label options') ->
                 H.label_
                 [ H.span_ [ H.text label ]
                 , H.select
                   { name
                   , children:
                       mapFlipped
-                        items'
-                        (\i' -> H.option_ [ H.text i' ])
+                        options'
+                        (\(Option l v) ->
+                          H.option { children: [H.text l], value: v })
                   }
                 ]
           ]
@@ -163,15 +190,23 @@ render self@{ state: { built, form } } =
 
 update :: Self Props State Action -> Action -> StateUpdate Props State Action
 update self Noop = NoUpdate
-update self@{ state } AddItem =
+update self@{ state } AddOption =
   Update
     state
-      { form = state.form { item = "", items = Array.snoc state.form.items state.form.item } }
+      { form =
+          state.form
+            { optionLabel = ""
+            , optionValue = ""
+            , options = Array.snoc state.form.options (Option state.form.optionLabel state.form.optionValue)
+            }
+      }
 update self@{ state } BuildForm =
   Update state { built = Just (buildFromForm state.form), form = initialForm }
-update self@{ state } (EditItem v) =
-  Update state { form = state.form { item = v } }
 update self@{ state } (EditLabel v) =
   Update state { form = state.form { label = v } }
 update self@{ state } (EditName v) =
   Update state { form = state.form { name = v } }
+update self@{ state } (EditOptionLabel v) =
+  Update state { form = state.form { optionLabel = v } }
+update self@{ state } (EditOptionValue v) =
+  Update state { form = state.form { optionValue = v } }
