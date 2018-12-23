@@ -10,6 +10,8 @@ import Data.Maybe (Maybe(..), fromMaybe)
 import React.Basic (Component, JSX, Self, StateUpdate(..), capture, createComponent, make)
 import React.Basic.DOM as H
 import React.Basic.DOM.Events (preventDefault, targetValue)
+import Simple.JSON (class WriteForeign, writeImpl)
+import Simple.JSON as SimpleJSON
 
 type Props =
   {}
@@ -25,9 +27,18 @@ type Form =
 type OptionLabel = String
 type OptionValue = String
 data Option = Option OptionLabel OptionValue
+
+instance writeForeignOption :: WriteForeign Option where
+  writeImpl (Option label value) = do
+    writeImpl { label, value }
+
 type Label = String
 type Name = String
 data Select = Select Name Label (Array Option)
+
+instance writeForeignSelect :: WriteForeign Select where
+  writeImpl (Select name label options) = do
+    writeImpl { name, label, options }
 
 type State =
   { built :: Maybe (Array Select)
@@ -52,6 +63,10 @@ app = make component { initialState, render, update } {}
 
 buildFromForm :: Form -> Array Select
 buildFromForm { selects } = selects
+
+jsonTextFromSelects :: Array Select -> String
+jsonTextFromSelects selects =
+  SimpleJSON.writeJSON selects
 
 initialForm :: Form
 initialForm =
@@ -189,6 +204,13 @@ render self@{ state: { built, form } } =
                   ]
                 )
               )
+            ]
+          , H.div_
+            [ H.span_
+              [ H.text "selects (json)"
+              ]
+            , H.textarea
+              { readOnly: true, value: jsonTextFromSelects form.selects }
             ]
           ]
         , H.div_

@@ -6,6 +6,7 @@
     "prelude",
     "psci-support",
     "react-basic",
+    "simple-json",
     "test-unit"
   ]
 }
