@@ -14,6 +14,11 @@ import React.Basic.DOM.Events (preventDefault, targetValue)
 type Props =
   {}
 
+type Form =
+  { item :: Item
+  , items :: Items
+  , name :: String
+  }
 type Item = String
 type Items = Array Item
 type Name = String
@@ -22,11 +27,7 @@ data Select = Select Name Items
 
 type State =
   { built :: Maybe Select
-  , form ::
-    { item :: Item
-    , name :: String
-    }
-  , items :: Items
+  , form :: Form
   }
 
 data Action
@@ -42,18 +43,20 @@ component = createComponent "App"
 app :: JSX
 app = make component { initialState, render, update } {}
 
+buildFromForm :: Form -> Select
+buildFromForm { name, items } = Select name items
+
+initialForm :: Form
+initialForm = { item: "", items: [], name: "" }
+
 initialState :: State
 initialState =
   { built: Nothing
-  , form:
-    { item: ""
-    , name: ""
-    }
-  , items: []
+  , form: initialForm
   }
 
 render :: Self Props State Action -> JSX
-render self@{ state: { built, form, items } } =
+render self@{ state: { built, form } } =
   H.div
   { className: "app"
   , children:
@@ -91,7 +94,6 @@ render self@{ state: { built, form, items } } =
               , value: form.item
               }
             ]
-          , H.br {}
           , H.button
             { onClick:
                 capture
@@ -104,7 +106,7 @@ render self@{ state: { built, form, items } } =
         , H.div_
           [ H.ul_
             (mapFlipped
-              items
+              form.items
               (\i ->
                 H.li_
                 [ H.text i
@@ -147,9 +149,11 @@ render self@{ state: { built, form, items } } =
 update :: Self Props State Action -> Action -> StateUpdate Props State Action
 update self Noop = NoUpdate
 update self@{ state } AddItem =
-  Update state { form = state.form { item = "" }, items = Array.snoc state.items state.form.item }
+  Update
+    state
+      { form = state.form { item = "", items = Array.snoc state.form.items state.form.item } }
 update self@{ state } BuildForm =
-  Update state { built = Just (Select state.form.name state.items), form = { item: "", name: "" } }
+  Update state { built = Just (buildFromForm state.form), form = initialForm }
 update self@{ state } (EditItem v) =
   Update state { form = state.form { item = v } }
 update self@{ state } (EditName v) =
