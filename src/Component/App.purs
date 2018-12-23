@@ -16,10 +16,16 @@ type Props =
 
 type Item = String
 type Items = Array Item
+type Name = String
+
+data Select = Select Name Items
 
 type State =
-  { built :: Maybe Items
-  , item :: Item
+  { built :: Maybe Select
+  , form ::
+    { item :: Item
+    , name :: String
+    }
   , items :: Items
   }
 
@@ -28,6 +34,7 @@ data Action
   | AddItem
   | BuildForm
   | EditItem String
+  | EditName String
 
 component :: Component Props
 component = createComponent "App"
@@ -38,12 +45,15 @@ app = make component { initialState, render, update } {}
 initialState :: State
 initialState =
   { built: Nothing
-  , item: ""
+  , form:
+    { item: ""
+    , name: ""
+    }
   , items: []
   }
 
 render :: Self Props State Action -> JSX
-render self@{ state: { built, item, items } } =
+render self@{ state: { built, form, items } } =
   H.div
   { className: "app"
   , children:
@@ -59,6 +69,18 @@ render self@{ state: { built, item, items } } =
       , children:
         [ H.div_
           [ H.label_
+            [ H.span_ [ H.text "name" ]
+            , H.input
+              { onChange:
+                  capture
+                    self
+                    targetValue
+                    (\v -> EditName (fromMaybe "" v))
+              , value: form.name
+              }
+            ]
+          , H.br {}
+          , H.label_
             [ H.span_ [ H.text "item" ]
             , H.input
               { onChange:
@@ -66,7 +88,7 @@ render self@{ state: { built, item, items } } =
                     self
                     targetValue
                     (\v -> EditItem (fromMaybe "" v))
-              , value: item
+              , value: form.item
               }
             ]
           , H.br {}
@@ -76,7 +98,7 @@ render self@{ state: { built, item, items } } =
                   self
                   preventDefault
                   (const AddItem)
-            , children: [ H.text "OK" ]
+            , children: [ H.text "Add" ]
             }
           ]
         , H.div_
@@ -103,11 +125,17 @@ render self@{ state: { built, item, items } } =
         , H.div_
           [ case built of
               Nothing -> H.text "Not build"
-              Just items' ->
-                H.select_
-                  (mapFlipped
-                    items'
-                    (\i' -> H.option_ [ H.text i' ] ))
+              Just (Select name items') ->
+                H.label_
+                [ H.span_ [ H.text name ]
+                , H.select
+                  { name
+                  , children:
+                      mapFlipped
+                        items'
+                        (\i' -> H.option_ [ H.text i' ])
+                  }
+                ]
           ]
         ]
       }
@@ -119,8 +147,10 @@ render self@{ state: { built, item, items } } =
 update :: Self Props State Action -> Action -> StateUpdate Props State Action
 update self Noop = NoUpdate
 update self@{ state } AddItem =
-  Update state { item = "", items = Array.snoc state.items state.item }
+  Update state { form = state.form { item = "" }, items = Array.snoc state.items state.form.item }
 update self@{ state } BuildForm =
-  Update state { built = Just state.items }
+  Update state { built = Just (Select state.form.name state.items), form = { item: "", name: "" } }
 update self@{ state } (EditItem v) =
-  Update state { item = v }
+  Update state { form = state.form { item = v } }
+update self@{ state } (EditName v) =
+  Update state { form = state.form { name = v } }
