@@ -1,7 +1,7 @@
 {
   "name": "purescript-react-basic-select-builder",
   "description": "[mockmock.dev #195](https://mockmock.connpass.com/event/113191/) application",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "author": {
     "url": "https://bouzuya.net/",
     "name": "bouzuya",
