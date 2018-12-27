@@ -122,13 +122,6 @@ render self@{ state: { built, form } } =
                           (\(Option l v) -> { label: l, value: v }) })
           }
         , H.div_
-          [ H.span_
-            [ H.text "selects (json)"
-            ]
-          , H.textarea
-            { readOnly: true, value: jsonTextFromSelects form.selects }
-          ]
-        , H.div_
           [ H.button
             { onClick: capture_ self BuildForm
             , children: [ H.text "Build" ]
@@ -139,20 +132,32 @@ render self@{ state: { built, form } } =
               Nothing -> H.text "Not build"
               Just selects ->
                 H.div_
-                  (mapFlipped
-                    selects
-                    (\(Select name label options') ->
-                      H.label_
-                      [ H.span_ [ H.text label ]
-                      , H.select
-                        { name
-                        , children:
-                            mapFlipped
-                              options'
-                              (\(Option l v) ->
-                                H.option { children: [H.text l], value: v })
-                        }
-                      ]))
+                [ H.div_
+                  [ H.span_
+                    [ H.text "output (html)" ]
+                  , H.div_
+                    (mapFlipped
+                      selects
+                      (\(Select name label options') ->
+                        H.label_
+                        [ H.span_ [ H.text label ]
+                        , H.select
+                          { name
+                          , children:
+                              mapFlipped
+                                options'
+                                (\(Option l v) ->
+                                  H.option { children: [H.text l], value: v })
+                          }
+                        ]))
+                  ]
+                , H.div_
+                  [ H.span_
+                    [ H.text "output (json)" ]
+                  , H.textarea
+                    { readOnly: true, value: jsonTextFromSelects selects }
+                  ]
+                ]
           ]
         ]
       }
