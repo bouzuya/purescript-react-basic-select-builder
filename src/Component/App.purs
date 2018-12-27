@@ -2,14 +2,12 @@ module Component.App
   ( app
   ) where
 
-import Prelude
-
 import Data.Array as Array
 import Data.Functor (mapFlipped)
 import Data.Maybe (Maybe(..), fromMaybe)
-import React.Basic (Component, JSX, Self, StateUpdate(..), capture, createComponent, make)
+import React.Basic (Component, JSX, Self, StateUpdate(..), capture, capture_, createComponent, make)
 import React.Basic.DOM as H
-import React.Basic.DOM.Events (preventDefault, targetValue)
+import React.Basic.DOM.Events (targetValue)
 import Simple.JSON (class WriteForeign, writeImpl)
 import Simple.JSON as SimpleJSON
 
@@ -149,11 +147,7 @@ render self@{ state: { built, form } } =
               }
             ]
           , H.button
-            { onClick:
-                capture
-                  self
-                  preventDefault
-                  (const AddOption)
+            { onClick: capture_ self AddOption
             , children: [ H.text "Add Option" ]
             }
           , H.div_
@@ -173,11 +167,7 @@ render self@{ state: { built, form } } =
             ]
           , H.div_
             [ H.button
-              { onClick:
-                  capture
-                    self
-                    preventDefault
-                    (const AddSelect)
+              { onClick: capture_ self AddSelect
               , children: [ H.text "Add Select" ]
               }
             ]
@@ -216,11 +206,7 @@ render self@{ state: { built, form } } =
           ]
         , H.div_
           [ H.button
-            { onClick:
-                capture
-                  self
-                  preventDefault
-                  (const BuildForm)
+            { onClick: capture_ self BuildForm
             , children: [ H.text "Build" ]
             }
           ]
