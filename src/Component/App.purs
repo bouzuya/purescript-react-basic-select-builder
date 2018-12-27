@@ -2,10 +2,11 @@ module Component.App
   ( app
   ) where
 
+import Component.OptionsForm as OptionsForm
 import Data.Array as Array
-import Data.Functor (mapFlipped)
+import Data.Functor (mapFlipped, (<#>))
 import Data.Maybe (Maybe(..), fromMaybe)
-import React.Basic (Component, JSX, Self, StateUpdate(..), capture, capture_, createComponent, make)
+import React.Basic (Component, JSX, Self, StateUpdate(..), capture, capture_, createComponent, make, send)
 import React.Basic.DOM as H
 import React.Basic.DOM.Events (targetValue)
 import Simple.JSON (class WriteForeign, writeImpl)
@@ -123,48 +124,15 @@ render self@{ state: { built, form } } =
               }
             ]
           , H.br {}
-          , H.label_
-            [ H.span_ [ H.text "option label" ]
-            , H.input
-              { onChange:
-                  capture
-                    self
-                    targetValue
-                    (\v -> EditOptionLabel (fromMaybe "" v))
-              , value: form.optionLabel
-              }
-            ]
-          , H.br {}
-          , H.label_
-            [ H.span_ [ H.text "option value" ]
-            , H.input
-              { onChange:
-                  capture
-                    self
-                    targetValue
-                    (\v -> EditOptionValue (fromMaybe "" v))
-              , value: form.optionValue
-              }
-            ]
-          , H.button
-            { onClick: capture_ self AddOption
-            , children: [ H.text "Add Option" ]
+          , OptionsForm.optionsForm
+            { label: form.optionLabel
+            , onAddOption: send self AddOption
+            , onChangeLabel: (\v -> send self (EditOptionLabel v))
+            , onChangeValue: (\v -> send self (EditOptionValue v))
+            , options: form.options <#> (\(Option label value) -> { label, value })
+            , value: form.optionValue
             }
-          , H.div_
-            [ H.span_
-              [ H.text "options"
-              ]
-            , H.ul_
-              (mapFlipped
-                form.options
-                (\(Option l v) ->
-                  H.li_
-                  [ H.span_
-                    [ H.text l ]
-                  , H.span_
-                    [ H.text v ]
-                  ]))
-            ]
+
           , H.div_
             [ H.button
               { onClick: capture_ self AddSelect
