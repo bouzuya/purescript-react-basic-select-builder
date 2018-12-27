@@ -5,7 +5,7 @@ module Component.OptionsForm
 import Data.Functor (mapFlipped)
 import Data.Maybe (fromMaybe)
 import Effect (Effect)
-import Prelude (Unit, (>>>))
+import Prelude (Unit, const, (>>>))
 import React.Basic (Component, JSX, createComponent, makeStateless)
 import React.Basic.DOM as H
 import React.Basic.DOM.Events (preventDefault, stopPropagation, targetValue)
@@ -55,7 +55,7 @@ render props =
     { onClick:
         handler
           (preventDefault >>> stopPropagation)
-          (\_ -> props.onAddOption)
+          (const props.onAddOption)
     , children: [ H.text "Add Option" ]
     }
   , H.div_

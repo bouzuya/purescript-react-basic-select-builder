@@ -2,13 +2,12 @@ module Component.App
   ( app
   ) where
 
-import Component.OptionsForm as OptionsForm
+import Component.SelectsForm as SelectsForm
 import Data.Array as Array
 import Data.Functor (mapFlipped, (<#>))
-import Data.Maybe (Maybe(..), fromMaybe)
-import React.Basic (Component, JSX, Self, StateUpdate(..), capture, capture_, createComponent, make, send)
+import Data.Maybe (Maybe(..))
+import React.Basic (Component, JSX, Self, StateUpdate(..), capture_, createComponent, make, send)
 import React.Basic.DOM as H
-import React.Basic.DOM.Events (targetValue)
 import Simple.JSON (class WriteForeign, writeImpl)
 import Simple.JSON as SimpleJSON
 
@@ -99,78 +98,35 @@ render self@{ state: { built, form } } =
     , H.div
       { className: "body"
       , children:
-        [ H.div_
-          [ H.label_
-            [ H.span_ [ H.text "select name" ]
-            , H.input
-              { onChange:
-                  capture
-                    self
-                    targetValue
-                    (\v -> EditName (fromMaybe "" v))
-              , value: form.name
-              }
-            ]
-          , H.br {}
-          , H.label_
-            [ H.span_ [ H.text "select label" ]
-            , H.input
-              { onChange:
-                  capture
-                    self
-                    targetValue
-                    (\v -> EditLabel (fromMaybe "" v))
-              , value: form.label
-              }
-            ]
-          , H.br {}
-          , OptionsForm.optionsForm
-            { label: form.optionLabel
-            , onAddOption: send self AddOption
-            , onChangeLabel: (\v -> send self (EditOptionLabel v))
-            , onChangeValue: (\v -> send self (EditOptionValue v))
-            , options: form.options <#> (\(Option label value) -> { label, value })
-            , value: form.optionValue
-            }
-
-          , H.div_
-            [ H.button
-              { onClick: capture_ self AddSelect
-              , children: [ H.text "Add Select" ]
-              }
-            ]
-          , H.div_
-            [ H.span_
-              [ H.text "selects"
-              ]
-            , H.ul_
-              (mapFlipped
-                form.selects
+        [ SelectsForm.selectsForm
+          { label: form.label
+          , name: form.name
+          , onAddOption: send self AddOption
+          , onAddSelect: send self AddSelect
+          , onChangeLabel: (\v -> send self (EditLabel v))
+          , onChangeName: (\v -> send self (EditName v))
+          , onChangeOptionLabel: (\v -> send self (EditOptionLabel v))
+          , onChangeOptionValue: (\v -> send self (EditOptionValue v))
+          , optionLabel: form.optionLabel
+          , optionValue: form.optionValue
+          , options:
+              form.options <#>
+                (\(Option label value) -> { label, value })
+          , selects:
+              form.selects <#>
                 (\(Select name label options) ->
-                  H.div_
-                  [ H.span_ [ H.text name ]
-                  , H.span_ [ H.text label ]
-                  , H.ul_
-                      (mapFlipped
-                        options
-                        (\(Option l v) ->
-                          H.li_
-                          [ H.span_
-                            [ H.text l ]
-                          , H.span_
-                            [ H.text v ]
-                          ]))
-                  ]
-                )
-              )
+                    { label
+                    , name
+                    , options:
+                        options <#>
+                          (\(Option l v) -> { label: l, value: v }) })
+          }
+        , H.div_
+          [ H.span_
+            [ H.text "selects (json)"
             ]
-          , H.div_
-            [ H.span_
-              [ H.text "selects (json)"
-              ]
-            , H.textarea
-              { readOnly: true, value: jsonTextFromSelects form.selects }
-            ]
+          , H.textarea
+            { readOnly: true, value: jsonTextFromSelects form.selects }
           ]
         , H.div_
           [ H.button
