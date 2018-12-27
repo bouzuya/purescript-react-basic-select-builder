@@ -58,6 +58,7 @@ data Action
 component :: Component Props
 component = createComponent "App"
 
+-- | app component
 app :: JSX
 app = make component { initialState, render, update } {}
 
